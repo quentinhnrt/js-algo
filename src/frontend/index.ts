@@ -24,14 +24,14 @@ const cellSize = Math.round(Math.min(width, height) / 9)
 // Domaines des valeurs possibles pour chaques cellules de la grille
 const cellDomains: number[][][] = []
 // Eventuelles valeurs choisie par le joueur
-const cellValues: (number | null)[][][] = []
+const cellValues: (number | null)[][] = []
 // Initialisation des deux structure de données précédentes
 for (let j = 0; j < 9; j++) {
     cellDomains.push([])
     cellValues.push([])
     for (let i = 0; i < 9; i++) {
         cellDomains[j].push([1, 2, 3, 4, 5, 6, 7, 8, 9])
-        cellValues[j].push([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        cellValues[j].push(null)
     }
 }
 
@@ -67,43 +67,25 @@ function drawGroup(groupI: number, groupJ: number, fillColor?: string) {
 }
 
 function drawDomain(i: number, j: number) {
-    ctx.fillStyle = "#000"
-    ctx.font = "16px Arial"
-    ctx.textBaseline = "top"
-    ctx.textAlign = "start"
-    // Taille de la zone à l'intérieure de laquelle je veux écrire
-    const areaSize = Math.max(cellSize - 2, Math.floor(cellSize * 0.8))
-    // Pixels à sauter pour passer d'un texte à l'autre de la même ligne
-    const valueStep = Math.floor(areaSize / 3)
-    // Taille de l'espace blanc à laisser entre le bord de la cellule et le texte
-    const cellPadding = Math.max(1, Math.floor(cellSize * 0.1))
-
-    const domain = cellDomains[j][i]
-    // check if all cellValues are null
-    let allNull = true;
-
-    for (let k = 0; k < 9; k++) {
-        if (cellValues[j][i][k] !== null) {
-            allNull = false;
-        }
-    }
-
-    if (!allNull) {
-        const x = i * cellSize + cellPadding
-        const y = j * cellSize + cellPadding
-        for (let k = 0; k < 9; k++) {
-            // k-ième valeur du domaine, ou null si la valeur n'est plus permise
-            const vk = cellValues[j][i][k];
-            // Numéro de colonne de cette k-ième valeur
-            const vi = (k) % 3
-            // Numéro de ligne de cette k-ième valeur
-            const vj = Math.floor((k) / 3)
-            // Coordonnées en pixel de la valeur
-            const vx = x + valueStep * vi
-            const vy = y + valueStep * vj
-            ctx.fillText(vk !== null ? vk.toString() : "", vx, vy)
-        }
+    if (cellValues[j][i] !== null) {
+        ctx!.font = "bold 60px Arial"
+        ctx!.textBaseline = "middle"
+        ctx!.textAlign = "center"
+        const x = i * cellSize + Math.floor(cellSize * 0.5)
+        const y = j * cellSize + Math.floor(cellSize * 0.575)
+        ctx.fillText(cellValues[j][i]!.toString(), x, y)
     } else {
+        ctx.fillStyle = "#000"
+        ctx.font = "16px Arial"
+        ctx.textBaseline = "top"
+        ctx.textAlign = "start"
+        const domain = cellDomains[j][i]
+        // Taille de la zone à l'intérieure de laquelle je veux écrire
+        const areaSize = Math.max(cellSize - 2, Math.floor(cellSize * 0.8))
+        // Pixels à sauter pour passer d'un texte à l'autre de la même ligne
+        const valueStep = Math.floor(areaSize / 3)
+        // Taille de l'espace blanc à laisser entre le bord de la cellule et le texte
+        const cellPadding = Math.max(1, Math.floor(cellSize * 0.1))
         // Coordonnées en pixel de ma zone de texte
         const x = i * cellSize + cellPadding
         const y = j * cellSize + cellPadding
@@ -124,6 +106,7 @@ function drawDomain(i: number, j: number) {
 }
 
 function drawDomains() {
+
     for (let j = 0; j < 9; j++) {
         for (let i = 0; i < 9; i++) {
             drawDomain(i, j)
@@ -150,7 +133,6 @@ drawDomains()
 
 
 let selectedCell: [number, number] | null = null
-let currentMousePos: { x: number, y: number } | null = null
 
 canvas.addEventListener("mousemove", (event: MouseEvent) => {
     event.stopPropagation()
@@ -158,7 +140,6 @@ canvas.addEventListener("mousemove", (event: MouseEvent) => {
     const y = event.offsetY
     const i = Math.min(Math.floor(x / cellSize), 8)
     const j = Math.min(Math.floor(y / cellSize), 8)
-    currentMousePos = {x, y}
     if (selectedCell === null || selectedCell[0] !== i || selectedCell[1] !== j) {
         selectedCell = [i, j]
     }
@@ -167,103 +148,103 @@ canvas.addEventListener("mousemove", (event: MouseEvent) => {
 canvas.addEventListener("mouseout", (event: MouseEvent) => {
     event.stopPropagation()
     selectedCell = null
-    console.log("Celulle sélectionnée:", selectedCell)
 })
 
-window.addEventListener("keyup", toggle)
+window.addEventListener("keyup", toggle);
+
+function addValueToOldPos(key: number, x: number, y: number) {
+    for (let j = 0; j < 9; j++) {
+        if (j !== x) {
+            addValueToLine(key, j)
+        }
+        if (j !== y) {
+            addValueToColumn(key, j)
+        }
+    }
+}
 
 function toggle(event: KeyboardEvent) {
     event.stopPropagation()
 
     if (selectedCell === null) {
-        return;
+        return
     }
 
-    // check if key is a number between 1 and 9
-    const key = parseInt(event.key);
+    const x = selectedCell[0]
+    const y = selectedCell[1]
+
+    let key = parseInt(event.key)
 
     if (isNaN(key) || key < 1 || key > 9) {
-        return;
+        return
     }
 
-    const [i, j] = selectedCell;
-
-    const miniCellX = Math.floor((currentMousePos!.x - i * cellSize) / (cellSize / 3));
-    const miniCellY = Math.floor((currentMousePos!.y - j * cellSize) / (cellSize / 3));
-
-    const miniCellIndex = miniCellX + miniCellY * 3;
-
-    let wasSame = false;
-
-    if (cellValues[j][i].includes(key)) {
-        for (let k = 0; k < 9; k++) {
-            let value = cellValues[j][i][k];
-            if (value === key) {
-                wasSame = true;
-                cellValues[j][i][k] = null;
-            }
-        }
+    if (cellValues[y][x] === key) {
+        cellValues[y][x] = null
+        addValueToLine(key, y)
+        addValueToColumn(key, x)
+    } else {
+        addValueToOldPos(key, x, y)
+        removeValueFromLine(key, x, y)
+        removeValueFromColumn(key, x, y)
+        cellValues[y][x] = key
     }
 
-    removeFromLine(j, miniCellY, key);
-    removeFromColumn(i, miniCellY, key);
+    drawEmptyGrid()
+    drawDomains()
 
-    if (!wasSame) {
-        cellValues[j][i][miniCellIndex] = key;
-    }
-
-
-
-
-    drawEmptyGrid();
-    drawDomains();
 }
 
-function removeFromLine(y, miniCellY, value) {
+function removeValueFromLine(value: number, x:number, y: number) {
     for (let i = 0; i < 9; i++) {
-        let range = null
-        switch (miniCellY) {
-            case 0:
-                range = [0, 1, 2];
-                break;
-            case 1:
-                range = [3, 4, 5];
-                break;
-            case 2:
-                range = [6, 7, 8];
-                break;
+        if (cellValues[y][i] === value) {
+            cellValues[y][i] = null;
         }
 
-        // check if value is in range
-        range.forEach((index) => {
-            if (cellValues[y][i][index] === value) {
-                cellValues[y][i][index] = null;
-            }
-        })
+        if (cellDomains[y][i].includes(value)) {
+            cellDomains[y][i].splice(cellDomains[y][i].indexOf(value), 1)
+        }
+
+        /*
+        if (i !== x) {
+            addValueToColumn(value, i)
+        }
+         */
     }
 }
 
-function removeFromColumn(x, miniCellX, value) {
+function removeValueFromColumn(value: number, x: number, y: number) {
     for (let j = 0; j < 9; j++) {
-        let range = null
-        switch (miniCellX) {
-            case 0:
-                range = [0, 1, 2];
-                break;
-            case 1:
-                range = [3, 4, 5];
-                break;
-            case 2:
-                range = [6, 7, 8];
-                break;
+        if (cellValues[j][x] === value) {
+            cellValues[j][x] = null;
         }
 
-        // check if value is in range
-        range.forEach((index) => {
-            if (cellValues[j][x][index] === value) {
-                cellValues[j][x][index] = null;
-            }
-        })
+        if (cellDomains[j][x].includes(value)) {
+            cellDomains[j][x].splice(cellDomains[j][x].indexOf(value), 1)
+        }
+
+        /*
+        if (j !== y) {
+            addValueToLine(value, j)
+        }
+         */
+
+    }
+}
+
+function addValueToLine(value: number, y: number) {
+    for (let i = 0; i < 9; i++) {
+        if (!cellDomains[y][i].includes(value)) {
+            cellDomains[y][i].push(value)
+        }
+    }
+}
+
+function addValueToColumn(value: number, x: number) {
+    for (let j = 0; j < 9; j++) {
+        if (!cellDomains[j][x].includes(value)) {
+            cellDomains[j][x].push(value)
+        }
     }
 }
 
