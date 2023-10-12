@@ -1,18 +1,20 @@
-import {join} from "node:path";
-import {watch} from "node:fs";
-import {Server, ServerWebSocket} from "bun";
+import { join } from "node:path"
+import { WatchEventType, watch, FSWatcher } from "node:fs"
+import type { ServerWebSocket, Server } from "bun"
 
+const port: number = parseInt(process.argv[2])
 const baseDir = join(import.meta.dir, "..", "..", "www")
-const port: number = parseInt(process.argv[2]) || 3000;
 
-const wsClients: Set<ServerWebSocket<T>> = new Set()
-
-const watcher = watch(baseDir,
-    {recursive: true},
-    (event, filename) => {
-    wsClients.forEach(ws => ws.send("reload"))
-})
-
+const wsClients: Set<ServerWebSocket> = new Set()
+const watcher: FSWatcher = watch(
+    baseDir,
+    { recursive: true },
+    (event: WatchEventType, data: string | Error | undefined) => {
+        console.log("Something changed:", data)
+        wsClients.forEach((ws: ServerWebSocket) => ws.send("reload"))
+    }
+)
+process.on("SIGINT", () => watcher.close())
 
 const server = Bun.serve({
     port: port,
@@ -20,30 +22,31 @@ const server = Bun.serve({
         if (srv.upgrade(req)) {
             return
         }
-        const url = new URL(req.url);
-        const filename = url.pathname === "/" ? "/index.html" : url.pathname;
+        const url = new URL(req.url)
+        const filename = url.pathname === "/" ? "/index.html" : url.pathname
         const filePath = join(baseDir, filename)
-        const file = Bun.file(filePath)
-
-        if (!(await file.exists())) {
-            return new Response(`Unknown file ${filename}`, {status: 404})
+        const fileToServe = Bun.file(filePath)
+        if (!(await fileToServe.exists())) {
+            return new Response(
+                `Unknown file "${filePath}"`,
+                {status: 404}
+            )
         }
-
-        //const text= await file.text()
-
-        return new Response(file)
+        return new Response(fileToServe)
     },
     websocket: {
-        message(ws: ServerWebSocket<T>, message: string): void | Promise<void> {
-            console.log(`Message received from ${ws.remoteAddress} : ${message}`)
-            ws.send(`You said: ${message}`)
-        },
-        open(ws: ServerWebSocket<T>): void | Promise<void> {
+        open(ws: ServerWebSocket) {
             wsClients.add(ws)
         },
-        close(ws: ServerWebSocket<T>): void | Promise<void> {
+        close(ws: ServerWebSocket) {
+            wsClients.delete(ws)
+        },
+        message(ws: ServerWebSocket, message: string) {
+					if (message !== "ping") {
+						console.log(`Message received from "${ws.remoteAddress}": "${message}"`)
+					}
+          ws.send("Well received")
         }
     }
 })
-
-console.log(`Listening on port ${server.hostname}:${server.port}`)
+console.log(`HTTP Server listening on ${server.hostname}:${server.port}`)
