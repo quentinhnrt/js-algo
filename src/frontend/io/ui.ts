@@ -1,5 +1,7 @@
 /// <reference lib="dom" />
 
+import {Domain} from "../solver/domain.ts";
+
 export class SudokuUI {
 	private static readonly _uis: WeakMap<HTMLCanvasElement, SudokuUI> = new WeakMap()
 	static bgColor = "#DDD"
@@ -93,7 +95,7 @@ export class SudokuUI {
 		return this
 	}
 
-	drawCellDomain(i: number, j: number, domain: number[]): SudokuUI {
+	drawCellDomain(i: number, j: number, domain: Domain<number>): SudokuUI {
 		this._ctx.fillStyle = "#000"
 		this._ctx.font = "16px Arial"
 		this._ctx.textBaseline = "top"
@@ -104,7 +106,7 @@ export class SudokuUI {
 		const x = i * this._cellSize + cellPadding
 		const y = j * this._cellSize + cellPadding
 		for (let k = 1; k <= 9; k++) {
-			const vk = domain.includes(k) ? k : null
+			const vk = domain.contains(k) ? k : null
 			const vi = (k - 1) % 3
 			const vj = Math.floor((k - 1) / 3)
 			const vx = x + valueStep * vi

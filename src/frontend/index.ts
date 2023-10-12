@@ -1,11 +1,13 @@
 /// <reference lib="dom" />
 
 import { wsInit, SudokuUI, eventHandlersInit } from "./io"
+import {Domain} from "./solver/domain.ts";
+
 
 type InitialState = {
 	readonly canvas: HTMLCanvasElement
 	readonly ui: SudokuUI
-	readonly cellDomains: number[][][]
+	readonly cellDomains: Array<Array<Domain<number>>>
 	readonly cellValues: (number | null)[][]
 }
 
@@ -19,13 +21,14 @@ function init(canvasId: string): InitialState | false {
 	if (!ui) {
 		return false
 	}
-	const cellDomains: number[][][] = []
+	const cellDomains: Array<Array<Domain<number>>> = []
 	const cellValues: (number | null)[][] = []
 	for (let j = 0; j < 9; j++) {
 		cellDomains.push([])
 		cellValues.push([])
 		for (let i = 0; i < 9; i++) {
-			cellDomains[j].push([1, 2, 3, 4, 5, 6, 7, 8, 9])
+			let domain = new Domain<number>([1, 2, 3, 4, 5, 6, 7, 8, 9])
+			cellDomains[j].push(domain)
 			cellValues[j].push(null)
 		}
 	}
@@ -35,6 +38,7 @@ function init(canvasId: string): InitialState | false {
 function start(initialState: InitialState) {
 	const {canvas, ui, cellDomains, cellValues} = initialState
 	let selectedCell: [number, number] | null = null
+
 
 	function drawCellContent(i: number, j: number) {
 		if (cellValues[j][i] !== null) {
@@ -54,17 +58,12 @@ function start(initialState: InitialState) {
 
 	function removeValueFromCellDomain(i: number, j: number, v: number) {
 		const domain = cellDomains[j][i]
-		const valueIndex = domain.indexOf(v)
-		if (valueIndex !== -1) {
-			domain.splice(valueIndex, 1)
-		}
+		domain.remove(v)
 	}
 
 	function addValueToCellDomain(i: number, j: number, v: number) {
 		const domain = cellDomains[j][i]
-		if (!domain.includes(v)) {
-			domain.push(v)
-		}
+		domain.add(v)
 	}
 
 	function maintainImpactedCellsDomain(
@@ -99,7 +98,7 @@ function start(initialState: InitialState) {
 		const i = selectedCell![0]
 		const j = selectedCell![1]
 		if (cellValues[j][i] === null) {
-			if (cellDomains[j][i].includes(v)) {
+			if (cellDomains[j][i].contains(v)) {
 				cellValues[j][i] = v
 				maintainImpactedCellsDomain(i, j, v, true)
 				refreshGrid()
