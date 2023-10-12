@@ -189,6 +189,9 @@ function toggle(event: KeyboardEvent) {
         addValueToColumn(key, x)
         addValueToGroup(key, x, y)
     } else {
+        if (cellValues[y][x] !== null) {
+            return
+        }
         addValueToOldPos(key, x, y)
         removeValueFromLine(key, x, y)
         removeValueFromColumn(key, x, y)
