@@ -154,11 +154,15 @@ window.addEventListener("keyup", toggle);
 
 function addValueToOldPos(key: number, x: number, y: number) {
     for (let j = 0; j < 9; j++) {
-        if (j !== x) {
+        if (j !== x && cellValues[y][j] === key) {
             addValueToLine(key, j)
         }
-        if (j !== y) {
+        if (j !== y && cellValues[j][x] === key) {
             addValueToColumn(key, j)
+        }
+
+        if (j !== x && j !== y && cellValues[Math.floor(y / 3) * 3 + Math.floor(j / 3)][Math.floor(x / 3) * 3 + j % 3] === key) {
+            addValueToGroup(key, j, j)
         }
     }
 }
@@ -183,10 +187,12 @@ function toggle(event: KeyboardEvent) {
         cellValues[y][x] = null
         addValueToLine(key, y)
         addValueToColumn(key, x)
+        addValueToGroup(key, x, y)
     } else {
         addValueToOldPos(key, x, y)
         removeValueFromLine(key, x, y)
         removeValueFromColumn(key, x, y)
+        removeValueFromGroup(key, x, y)
         cellValues[y][x] = key
     }
 
@@ -195,7 +201,7 @@ function toggle(event: KeyboardEvent) {
 
 }
 
-function removeValueFromLine(value: number, x:number, y: number) {
+function removeValueFromLine(value: number, x: number, y: number) {
     for (let i = 0; i < 9; i++) {
         if (cellValues[y][i] === value) {
             cellValues[y][i] = null;
@@ -232,6 +238,24 @@ function removeValueFromColumn(value: number, x: number, y: number) {
     }
 }
 
+function removeValueFromGroup(value: number, x: number, y: number) {
+    const groupX = Math.floor(x / 3)
+    const groupY = Math.floor(y / 3)
+    for (let j = 0; j < 3; j++) {
+        for (let i = 0; i < 3; i++) {
+
+            if (cellValues[groupY * 3 + j][groupX * 3 + i] === value) {
+                cellValues[groupY * 3 + j][groupX * 3 + i] = null;
+            }
+
+            if (cellDomains[groupY * 3 + j][groupX * 3 + i].includes(value)) {
+                cellDomains[groupY * 3 + j][groupX * 3 + i].splice(cellDomains[groupY * 3 + j][groupX * 3 + i].indexOf(value), 1)
+            }
+
+        }
+    }
+}
+
 function addValueToLine(value: number, y: number) {
     for (let i = 0; i < 9; i++) {
         if (!cellDomains[y][i].includes(value)) {
@@ -244,6 +268,20 @@ function addValueToColumn(value: number, x: number) {
     for (let j = 0; j < 9; j++) {
         if (!cellDomains[j][x].includes(value)) {
             cellDomains[j][x].push(value)
+        }
+    }
+}
+
+function addValueToGroup(value: number, x: number, y: number) {
+    const groupX = Math.floor(x / 3)
+    const groupY = Math.floor(y / 3)
+    for (let j = 0; j < 3; j++) {
+        for (let i = 0; i < 3; i++) {
+
+            if (!cellDomains[groupY * 3 + j][groupX * 3 + i].includes(value)) {
+                cellDomains[groupY * 3 + j][groupX * 3 + i].push(value)
+            }
+
         }
     }
 }
