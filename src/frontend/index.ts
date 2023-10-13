@@ -2,6 +2,7 @@
 
 import { wsInit, SudokuUI, eventHandlersInit } from "./io"
 import {Domain} from "./solver/domain.ts";
+import {Variable} from "./solver/variable.ts";
 
 
 type InitialState = {
@@ -21,13 +22,21 @@ function init(canvasId: string): InitialState | false {
 	if (!ui) {
 		return false
 	}
-	const cellDomains: Array<Array<Domain<number>>> = []
+	const cellDomains: Array<Array<Domain<Variable<number>>>> = []
 	const cellValues: (number | null)[][] = []
 	for (let j = 0; j < 9; j++) {
 		cellDomains.push([])
 		cellValues.push([])
 		for (let i = 0; i < 9; i++) {
-			let domain = new Domain<number>([1, 2, 3, 4, 5, 6, 7, 8, 9])
+			let variables = []
+
+			for (let k = 1; k <= 9; k++) {
+				let variable = new Variable();
+				variable.set(k)
+				variables.push(variable)
+			}
+
+			let domain = new Domain<Variable<number>>(variables)
 			cellDomains[j].push(domain)
 			cellValues[j].push(null)
 		}
@@ -129,6 +138,13 @@ function start(initialState: InitialState) {
 	})
 	wsInit()
 	refreshGrid()
+
+	document.getElementById("debugButton").addEventListener("click", (e) => {
+		e.stopPropagation()
+		e.preventDefault()
+
+		console.log(cellDomains[0][0].toJSON())
+	})
 }
 
 const retInit = init("sudokuCanvas")
