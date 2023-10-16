@@ -1,28 +1,25 @@
-import {Variable} from "./variable.ts";
-
 export type DomainType<Domain> = Array<Domain>
 
 export class Domain<T> {
-    private _values: DomainType<Variable<T>>;
+    private _values: DomainType<T>;
     constructor(v) {
         this._values = v
     }
-    remove<Variable>(v: Variable) {
-        const valueIndex = this._values.findIndex((value) => value.get() === v)
+    remove<T>(v: T) {
+        const valueIndex = this._values.indexOf(v)
         if (valueIndex !== -1) {
-            this._values[valueIndex].unset()
+            this._values.splice(valueIndex, 1)
         }
     }
 
     add<T>(v: T) {
-        const nullIndex = this._values.findIndex((v) => v.get() === null)
-        if (nullIndex !== -1) {
-            this._values[nullIndex].set(v)
+        if (!this._values.includes(v)) {
+            this._values.push(v)
         }
     }
 
     contains<T>(v: T) {
-        return this._values.some((value) => value.get() === v)
+        return this._values.includes(v)
     }
 
     copy() {
@@ -30,11 +27,6 @@ export class Domain<T> {
     }
 
     toJSON() {
-        // use toJson in value
-        let values = []
-        for (let i = 0; i < this._values.length; i++) {
-            values.push(this._values[i].toJson())
-        }
-        return JSON.stringify(values)
+        return JSON.stringify(this._values)
     }
 }
