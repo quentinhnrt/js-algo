@@ -1,6 +1,6 @@
 import {JSONArray} from "./types.ts";
 
-export type DomainType<T> = Array<T> | JSONArray3332313
+export type DomainType<T> = Array<T> | JSONArray
 
 export class Domain<T> {
     private _values: DomainType<T>;
