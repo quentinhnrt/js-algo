@@ -91,7 +91,7 @@ export class SudokuUI {
 		this._ctx.textAlign = "center"
 		const x = i * this._cellSize + Math.floor(this._cellSize * 0.5)
 		const y = j * this._cellSize + Math.floor(this._cellSize * 0.575)
-		this._ctx.fillText(value.toString(), x, y)
+		this._ctx.fillText(value, x, y)
 		return this
 	}
 
@@ -106,7 +106,7 @@ export class SudokuUI {
 		const x = i * this._cellSize + cellPadding
 		const y = j * this._cellSize + cellPadding
 		for (let k = 1; k <= 9; k++) {
-			const vk = domain.contains(k) ? k : null
+			const vk = domain.has(k) ? k : null
 			const vi = (k - 1) % 3
 			const vj = Math.floor((k - 1) / 3)
 			const vx = x + valueStep * vi

@@ -2,13 +2,14 @@
 
 import { wsInit, SudokuUI, eventHandlersInit } from "./io"
 import {Domain} from "./solver/domain.ts";
+import {Variable} from "./solver/variable.ts";
 
 
 type InitialState = {
 	readonly canvas: HTMLCanvasElement
 	readonly ui: SudokuUI
 	readonly cellDomains: Array<Array<Domain<number>>>
-	readonly cellValues: (number | null)[][]
+	readonly cellValues: Variable<number>[][]
 }
 
 function init(canvasId: string): InitialState | false {
@@ -22,14 +23,15 @@ function init(canvasId: string): InitialState | false {
 		return false
 	}
 	const cellDomains: Array<Array<Domain<number>>> = []
-	const cellValues: (number | null)[][] = []
+	const cellValues: Variable<number>[][] = []
 	for (let j = 0; j < 9; j++) {
 		cellDomains.push([])
 		cellValues.push([])
 		for (let i = 0; i < 9; i++) {
 			let domain = new Domain<number>([1, 2, 3, 4, 5, 6, 7, 8, 9])
+			let variable = new Variable<number>()
 			cellDomains[j].push(domain)
-			cellValues[j].push(null)
+			cellValues[j].push(variable)
 		}
 	}
 	return { canvas, ui, cellDomains, cellValues }
@@ -41,8 +43,8 @@ function start(initialState: InitialState) {
 
 
 	function drawCellContent(i: number, j: number) {
-		if (cellValues[j][i] !== null) {
-			ui.drawCellValue(i, j, cellValues[j][i]!)
+		if (cellValues[j][i].get() !== null) {
+			ui.drawCellValue(i, j, cellValues[j][i].get())
 		} else {
 			ui.drawCellDomain(i, j, cellDomains[j][i])
 		}
@@ -58,7 +60,7 @@ function start(initialState: InitialState) {
 
 	function removeValueFromCellDomain(i: number, j: number, v: number) {
 		const domain = cellDomains[j][i]
-		domain.remove(v)
+		domain.del(v)
 	}
 
 	function addValueToCellDomain(i: number, j: number, v: number) {
@@ -97,18 +99,18 @@ function start(initialState: InitialState) {
 	function toggle(v: number) {
 		const i = selectedCell![0]
 		const j = selectedCell![1]
-		if (cellValues[j][i] === null) {
-			if (cellDomains[j][i].contains(v)) {
-				cellValues[j][i] = v
+		if (cellValues[j][i].get() === null) {
+			if (cellDomains[j][i].has(v)) {
+				cellValues[j][i].set(v)
 				maintainImpactedCellsDomain(i, j, v, true)
 				refreshGrid()
 			}
-		} else if (cellValues[j][i] === v) {
-			cellValues[j][i] = null
+		} else if (cellValues[j][i].get() === v) {
+			cellValues[j][i].unset()
 			maintainImpactedCellsDomain(i, j, v, false)
 			for (let j2 = 0; j2 < 9; j2++) {
 				for (let i2 = 0; i2 < 9; i2++) {
-					if (cellValues[j2][i2] === v) {
+					if (cellValues[j2][i2].get() === v) {
 						maintainImpactedCellsDomain(i2, j2, v, true)
 					}
 				}

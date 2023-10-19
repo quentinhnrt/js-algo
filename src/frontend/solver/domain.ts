@@ -1,11 +1,13 @@
-export type DomainType<Domain> = Array<Domain>
+import {JSONArray} from "./types.ts";
+
+export type DomainType<T> = Array<T> | JSONArray3332313
 
 export class Domain<T> {
     private _values: DomainType<T>;
     constructor(v) {
         this._values = v
     }
-    remove<T>(v: T) {
+    del<T>(v: T) {
         const valueIndex = this._values.indexOf(v)
         if (valueIndex !== -1) {
             this._values.splice(valueIndex, 1)
@@ -18,7 +20,7 @@ export class Domain<T> {
         }
     }
 
-    contains<T>(v: T) {
+    has<T>(v: T) {
         return this._values.includes(v)
     }
 
@@ -28,5 +30,9 @@ export class Domain<T> {
 
     toJSON() {
         return JSON.stringify(this._values)
+    }
+
+    fromJSON(json: JSONArray) {
+        this._values = json
     }
 }
