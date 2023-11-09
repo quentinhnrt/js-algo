@@ -8,7 +8,8 @@
     "start:backend": "bun run src/backend/index.ts",
     "dev:backend": "bun --hot run src/backend/index.ts",
     "build:front": "bun --minify build src/frontend/index.ts --outdir www/js",
-    "dev:front": "bun --minify --watch build src/frontend/index.ts --outdir www/js"
+    "dev:front": "bun --minify --watch build src/frontend/index.ts --outdir www/js",
+    "ts:watch": "tsc --watch --noEmit"
   },
   "devDependencies": {
     "bun-types": "latest"

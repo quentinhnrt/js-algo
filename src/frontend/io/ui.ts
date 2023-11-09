@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 
-import {Domain} from "../solver/domain.ts";
+import type { SudokuDomain, SudokuValues, SudokuCell } from "../SudokuTypes"
+
 
 export class SudokuUI {
 	private static readonly _uis: WeakMap<HTMLCanvasElement, SudokuUI> = new WeakMap()
@@ -27,7 +28,7 @@ export class SudokuUI {
 
 	private constructor (
 		private readonly _canvas: HTMLCanvasElement,
-		private readonly _ctx: CanvasRenderingContext2D,
+		private readonly _ctx: CanvasRenderingContext2D
 	) {
 		this._cellSize = Math.round(Math.min(_canvas.width, _canvas.height) / 9)
 	}
@@ -84,18 +85,18 @@ export class SudokuUI {
 		return this
 	}
 
-	drawCellValue(i: number, j: number, value: number): SudokuUI {
+	drawCellValue(i: number, j: number, value: SudokuValues): SudokuUI {
 		this._ctx.fillStyle = "#000"
 		this._ctx.font = "bold 60px Arial"
 		this._ctx.textBaseline = "middle"
 		this._ctx.textAlign = "center"
 		const x = i * this._cellSize + Math.floor(this._cellSize * 0.5)
 		const y = j * this._cellSize + Math.floor(this._cellSize * 0.575)
-		this._ctx.fillText(value, x, y)
+		this._ctx.fillText(value.toString(), x, y)
 		return this
 	}
 
-	drawCellDomain(i: number, j: number, domain: Domain<number>): SudokuUI {
+	drawCellDomain(i: number, j: number, domain: SudokuDomain): SudokuUI {
 		this._ctx.fillStyle = "#000"
 		this._ctx.font = "16px Arial"
 		this._ctx.textBaseline = "top"
@@ -106,7 +107,7 @@ export class SudokuUI {
 		const x = i * this._cellSize + cellPadding
 		const y = j * this._cellSize + cellPadding
 		for (let k = 1; k <= 9; k++) {
-			const vk = domain.has(k) ? k : null
+			const vk = domain.has(k as SudokuValues) ? k : null
 			const vi = (k - 1) % 3
 			const vj = Math.floor((k - 1) / 3)
 			const vx = x + valueStep * vi
