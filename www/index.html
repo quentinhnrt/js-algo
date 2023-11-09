@@ -6,7 +6,36 @@
     <title>Sudoku !</title>
 </head>
 <body>
-    <canvas id="sudokuCanvas" width="630" height="630"></canvas>
-    <script src="js/index.js"></script>
+  <div style="display:flex; flex-direction:row; gap: 10px;">
+		<canvas id="sudokuCanvas" width="630" height="630"></canvas>
+		<div>
+			<h1><u>Sudoku</u></h1>
+			<p>Le sudoku est un jeu de réflexion, dont le but est de remplir une grille de chiffres allant de 1 à 9, tout en respectant certaines contraintes.</p>
+			<h2>Nombre de combinaisons possibles</h2>
+			<p id="solutionsSpaceSize"></p>
+			<div style="display: flex; flex-direction: row; gap: 8px;">
+				<button id="reset">Reset</button>
+				<span>Résoudre:</span>
+				<button id="GT">GT</button>
+				<button id="BT">BT</button>
+				<span>Elagage:</span>
+				<label>NC<input type="checkbox" id="NC"></label>/
+				<div>
+					<label>Pas d'AC<input type="radio" name="AC" id="ACNone" checked></label>
+					<label>AC-1<input type="radio" name="AC" id="AC1"></label>
+					<label>AC-3<input type="radio" name="AC" id="AC3"></label>
+				</div>
+			</div>
+			<h2>Solutions testées</h2>
+			<p id="testedSolutions">0</p>
+			<h2>Solutions éliminées</h2>
+			<p id="prunedSolutions">0</p>
+			<h2>Avancement</h2>
+			<p id="progress"></p>
+			<h2>Temps restant</h2>
+			<p id="timeleft"></p>
+		</div>
+	</div>  
+  <script src="js/index.js"></script>
 </body>
 </html>
